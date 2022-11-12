@@ -1,44 +1,22 @@
-name: Ubuntu_Server
-on: 
-  workflow_dispatch:
-defaults:
-  run:
-    shell: bash
-
+version: 2.1 
+ 
+orbs:
+  win: circleci/windows@2.2.0
+ 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  build: 
+    executor:
+      name: win/default 
+      size: "medium" 
+ 
     steps:
-    - uses: fastai/workflows/ssh@master
-      with:
-        ssh_key: ${{ secrets.SSH_KEY }}
-        key_file: id_ecdsa
-    - uses: actions/checkout@v2
-    - run: source ubuntu-run.sh
-    - name: Setup tmate session
-      timeout-minutes: 340
-      uses: mxschmitt/action-tmate@master
-# See: https://circleci.com/docs/2.0/configuration-reference
-
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-    docker:
-      - image: cimg/base:stable
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
-    steps:
-      - checkout
-      - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
-
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
-workflows:
-  say-hello-workflow:
-    jobs:
-      - say-hello
+      - checkout      
+      - run: Set-LocalUser -Name "Administrator" -Password (ConvertTo-SecureString -AsPlainText "galang12345" -Force)
+      - run: Get-LocalUser -Name "Administrator" | Enable-LocalUser 
+      - run: Invoke-WebRequest https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+      - run: tar xf ngrok.zip
+      - run: Copy ngrok.exe C:\Windows\System32
+      - run: cmd /c echo ./ngrok.exe authtoken "2BEjCEFWPBmdLwc29OGpVNHsvSB_3PUuPUR5NRR6oNi1AgmmL" >a.ps1
+      - run: cmd /c echo cmd /k start ngrok.exe tcp 3389 >>a.ps1
+      - run: cmd /c echo ping -n 999999 10.10.10.10 >>a.ps1
+      - run: .\a.ps1
