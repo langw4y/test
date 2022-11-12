@@ -1,6 +1,24 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
+name: Ubuntu_Server
+on: 
+  workflow_dispatch:
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: fastai/workflows/ssh@master
+      with:
+        ssh_key: ${{ secrets.SSH_KEY }}
+        key_file: id_ecdsa
+    - uses: actions/checkout@v2
+    - run: source ubuntu-run.sh
+    - name: Setup tmate session
+      timeout-minutes: 340
+      uses: mxschmitt/action-tmate@master
 # See: https://circleci.com/docs/2.0/configuration-reference
-version: 2.1
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
