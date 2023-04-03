@@ -1,27 +1,15 @@
-name: CI
+image: ubuntu:20.04
 
-on: [push, workflow_dispatch]
+build:
+  stage: build
+  script:
+    - apt update
+    - apt install android-tools-mkbootimg bc zip unzip bison build-essential curl clang tmate ca-certificates cpio curl flex git kmod libssl-dev libtinfo5 python2 sudo unzip wget xz-utils -y --no-install-recommends
+    - ln -sf python2.7 /usr/bin/python
+    - git clone https://github.com/dylanaraps/neofetch
+    - cd neofetch && make install
+    - neofetch
+    - sudo apt install tmate
+    - wget https://raw.githubusercontent.com/yash3056/ci-tmate/main/tmate && sudo bash tmate
 
-jobs:
-  build:
 
-    runs-on: windows-latest
-
-    steps:
-    - name: Download
-      run: Invoke-WebRequest https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
-    - name: Extract
-      run: Expand-Archive ngrok.zip
-    - name: Auth
-      run: .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
-      env:
-        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-    - name: Enable TS
-      run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
-    - run: Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-    - run: Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-    - run: Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "P@ssw0rd!" -Force)
-    - name: Create Tunnel
-      run: .\ngrok\ngrok.exe tcp 3389
-      
-    
